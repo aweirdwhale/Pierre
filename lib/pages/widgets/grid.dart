@@ -9,12 +9,7 @@ class Grid extends StatelessWidget {
         crossAxisCount: 5,
       ),
       itemBuilder: (BuildContext context, int index) {
-        return Padding(
-          padding: const EdgeInsets.all(2.0),
-          child: Container(
-            color: Colors.blueGrey,
-          ),
-        );
+        return Padding(padding: const EdgeInsets.all(2.0), child: Text('Meh'));
       },
     );
   }
