@@ -126,7 +126,22 @@ class PermissionTestScreenState extends State<PermissionTestScreen> {
   @override
   void initState() {
     super.initState();
-    _checkPermission();
+    // add some delay
+    Future.delayed(Duration(seconds: 1), () {
+      _checkPermission();
+    });
+  }
+
+  Future<bool> askPermission() async {
+    PermissionStatus mediaAccess =
+        await Permission.manageExternalStorage.request();
+    if (mediaAccess.isGranted) {
+      print("c'est good");
+      return true;
+    } else {
+      print("c'est pas good");
+      return false;
+    }
   }
 
   Future<void> _checkPermission() async {
@@ -139,7 +154,8 @@ class PermissionTestScreenState extends State<PermissionTestScreen> {
       });
     } else {
       // Demande la permission
-      status = await Permission.storage.request();
+      await Permission.storage.request();
+      status = await Permission.storage.status;
       if (status.isGranted) {
         setState(() {
           permissionStatus = "Permission accordée";
@@ -157,10 +173,15 @@ class PermissionTestScreenState extends State<PermissionTestScreen> {
     return Scaffold(
       appBar: AppBar(title: Text("Test de Permissions")),
       body: Center(
-        child: Text(
-          permissionStatus,
-          style: TextStyle(fontSize: 18),
-          textAlign: TextAlign.center,
+        child: ButtonTheme(
+          minWidth: 200.0,
+          height: 50.0,
+          child: ElevatedButton(
+            onPressed: () {
+              askPermission();
+            },
+            child: Text("Vérifier la permission"),
+          ),
         ),
       ),
     );
