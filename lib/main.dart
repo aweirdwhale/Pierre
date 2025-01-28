@@ -1,34 +1,33 @@
 import 'package:flutter/material.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'dart:io';
+// ext classes
+import 'mediahelper.dart';
 
 void main() {
-  runApp(MyApp());
+  runApp(App());
 }
 
-class MyApp extends StatelessWidget {
+class App extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
-      home: PermissionTestScreen(),
+      home: Photos(),
     );
   }
 }
 
-class PermissionTestScreen extends StatefulWidget {
+class Photos extends StatefulWidget {
   @override
-  PermissionTestScreenState createState() => PermissionTestScreenState();
+  PhotoState createState() => PhotoState();
 }
 
-class PermissionTestScreenState extends State<PermissionTestScreen> {
-  String permStat = "Vérification des permissions...";
-
+class PhotoState extends State<Photos> {
   @override
   void initState() {
     super.initState();
-    // add some delay
-    Future<void>.delayed(Duration(seconds: 1), () {
-      askPermission();
-    });
+    // ask for perms
+    askPermission();
   }
 
   Future<bool> askPermission() async {
@@ -36,26 +35,54 @@ class PermissionTestScreenState extends State<PermissionTestScreen> {
         await Permission.manageExternalStorage.status;
     if (mediaAccess.isGranted) {
       print("Permissions {manageExternalStorage} accordées");
-      permStat = "Accordé.";
       return true;
     } else {
-      print("Permissions {manageExternalStorage} accordées ");
-      permStat = "Refusé.";
+      print("Permissions {manageExternalStorage} refusées ");
+
+      askPermission();
 
       return false;
     }
   }
 
+  List<dynamic> getMedia() {
+    //call mediaHelper to get all media files
+    MediaHelper mediaHelper = MediaHelper();
+
+    // Liste vide
+    List<dynamic> mediaPaths = [];
+
+    // root directory
+    var dir = Directory('/storage/emulated/0/');
+    mediaHelper.getAllMediaPaths(dir, mediaPaths);
+
+    //print le nb d'images
+    print("Nombre d'images :");
+    print(mediaPaths.length);
+    return mediaPaths;
+  }
+
   @override
   Widget build(BuildContext context) {
+    List<dynamic> images = getMedia();
+
     return Scaffold(
-      appBar: AppBar(title: Text("Test de Permissions")),
-      body: Center(
-        child: ButtonTheme(
-          minWidth: 200.0,
-          height: 50.0,
-          child: Text(permStat),
+      appBar: AppBar(
+        title: Text('Pierre'),
+      ),
+      body: GridView.builder(
+        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+          crossAxisCount: 3,
+          crossAxisSpacing: 4,
+          mainAxisSpacing: 4,
         ),
+        itemCount: images.length,
+        itemBuilder: (context, index) {
+          return Image.file(
+            File(images[index]),
+            fit: BoxFit.cover,
+          );
+        },
       ),
     );
   }
