@@ -15,6 +15,8 @@
 
    <application
         android:requestLegacyExternalStorage="true"
+        android:usesCleartextTraffic="true"
+        android:enableOnBackInvokedCallback="true"
         android:label="pierre"
         android:name="${applicationName}"
         android:icon="@mipmap/ic_launcher">

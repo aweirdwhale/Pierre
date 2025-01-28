@@ -1,61 +1,49 @@
 package com.example.pierre
 
+import android.os.Build
+import android.provider.MediaStore
+import androidx.annotation.NonNull
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
 
-import android.provider.MediaStore
-import android.database.Cursor
-import android.net.Uri
-import android.content.ContentResolver
-
-import android.util.Log // Ajoute cet import
-
 class MainActivity: FlutterActivity() {
-    private val CHANNEL = "media_store"
+    private val CHANNEL = "com.example.pierre/media"
 
-    override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
+    override fun configureFlutterEngine(@NonNull flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
+
         MethodChannel(flutterEngine.dartExecutor.binaryMessenger, CHANNEL).setMethodCallHandler { call, result ->
-            if (call.method == "getImages") {
-                try {
-                    val images = getAllImagesFromMediaStore()
-                    Log.d("MediaStore", "Images trouvées : ${images.size}")
-                    result.success(images)
-                } catch (e: Exception) {
-                    Log.e("MediaStore", "Erreur lors de la récupération des images", e)
-                    result.error("ERROR", "Erreur lors de la récupération des images", null)
-                }
+            if (call.method == "getMedia") {
+                val mediaPaths = getMediaPaths()
+                result.success(mediaPaths)
             } else {
                 result.notImplemented()
             }
         }
     }
 
-    private fun getAllImagesFromMediaStore(): List<String> {
-        Log.d("MediaStore", "Début de la récupération des images...")
-        val imagePaths = mutableListOf<String>()
-        val projection = arrayOf(
-            MediaStore.Images.Media.DATA // Récupère les chemins des images
-        )
+    private fun getMediaPaths(): List<String> {
+        val mediaPaths = mutableListOf<String>()
 
-        val cursor: Cursor? = contentResolver.query(
-            MediaStore.Images.Media.EXTERNAL_CONTENT_URI,
-            projection,
-            null,
-            null,
-            "${MediaStore.Images.Media.DATE_ADDED} DESC LIMIT 50" // limite à 50 images
+        val projection = arrayOf(
+            MediaStore.Images.Media.DATA // Le chemin des fichiers images
         )
+        val selection = null
+        val selectionArgs = null
+        val sortOrder = "${MediaStore.Images.Media.DATE_ADDED} DESC" // Trier par date
+
+        val uri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI
+        val resolver = applicationContext.contentResolver
+        val cursor = resolver.query(uri, projection, selection, selectionArgs, sortOrder)
 
         cursor?.use {
-            val columnIndexData = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
+            val dataIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
             while (cursor.moveToNext()) {
-                val absolutePath = cursor.getString(columnIndexData)
-                imagePaths.add(absolutePath)
+                val path = cursor.getString(dataIndex)
+                mediaPaths.add(path)
             }
         }
-
-        Log.d("MediaStore", "Images récupérées : ${imagePaths.size}")
-        return imagePaths
+        return mediaPaths
     }
 }

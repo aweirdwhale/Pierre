@@ -1,11 +1,9 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:pierre/handlers/mediahandler.dart';
+import 'package:flutter/services.dart';
+import 'package:pierre/pages/index/fullscreen.dart';
 
 void main() {
-  WidgetsFlutterBinding.ensureInitialized();
-  PaintingBinding.instance.imageCache.maximumSizeBytes =
-      100 * 1024 * 1024; // 100 Mo de cache pour les images
   runApp(App());
 }
 
@@ -25,112 +23,67 @@ class Photos extends StatefulWidget {
 }
 
 class _PhotosState extends State<Photos> {
-  List<dynamic> getMedia() {
-    MediaHandler mediaHelper = MediaHandler();
-    List<dynamic> mediaPaths = [];
-    var dir = Directory('/storage/emulated/0/DCIM/');
-    mediaHelper.getAllMediaPaths(dir, mediaPaths);
-
-    print("Nombre d'images : ${mediaPaths.length}");
-    return mediaPaths;
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    List<dynamic> mediaPaths = getMedia();
-
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Photos : ${mediaPaths.length}'),
-      ),
-      body: GridView.builder(
-        gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
-          crossAxisCount: 3, // Ajuste le nombre de colonnes
-          crossAxisSpacing: 4,
-          mainAxisSpacing: 4,
-        ),
-        itemCount: mediaPaths.length,
-        itemBuilder: (context, index) {
-          return GestureDetector(
-            onTap: () {
-              Navigator.push(
-                context,
-                MaterialPageRoute(
-                  builder: (context) => FullScreenImage(
-                    mediaPaths: mediaPaths,
-                    initialIndex: index,
-                  ),
-                ),
-              );
-            },
-            child: Image.file(
-              File(mediaPaths[index]),
-              fit: BoxFit.cover, // Les images ne seront pas rognées
-              filterQuality: FilterQuality.low, // Amélioration de la qualité
-            ),
-          );
-        },
-      ),
-    );
-  }
-}
-
-class FullScreenImage extends StatefulWidget {
-  final List<dynamic> mediaPaths;
-  final int initialIndex;
-
-  FullScreenImage({required this.mediaPaths, required this.initialIndex});
-
-  @override
-  _FullScreenImageState createState() => _FullScreenImageState();
-}
-
-class _FullScreenImageState extends State<FullScreenImage> {
-  late PageController _pageController;
-  late int currentIndex;
+  // Using mediastore to get images
+  static const platform = MethodChannel('com.example.pierre/media');
+  List<String> mediaPaths = [];
+  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
-    currentIndex = widget.initialIndex;
-    _pageController = PageController(initialPage: currentIndex);
+    loadMedia();
   }
 
-  @override
-  void dispose() {
-    _pageController.dispose();
-    super.dispose();
+  // Charge toutes les images depuis MediaStore via le channel natif
+  Future<void> loadMedia() async {
+    try {
+      final List<dynamic> paths = await platform.invokeMethod('getMedia');
+      setState(() {
+        mediaPaths = paths.cast<String>();
+        isLoading = false;
+      });
+    } on PlatformException catch (e) {
+      print("Erreur lors de la récupération des médias : ${e.message}");
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Colors.black, // Fond noir
       appBar: AppBar(
-        backgroundColor: Colors.black, // Fond noir pour la barre
-        iconTheme: IconThemeData(color: Colors.white),
-        elevation: 0,
+        title: Text('${mediaPaths.length} photos.'),
       ),
-      body: PageView.builder(
-        controller: _pageController,
-        itemCount: widget.mediaPaths.length,
-        onPageChanged: (index) {
-          setState(() {
-            currentIndex = index;
-          });
-        },
-        itemBuilder: (context, index) {
-          return Card(
-            color: Colors.black, // Fond noir pour la carte
-            child: Image.file(
-              File(widget.mediaPaths[index]),
-              fit: BoxFit
-                  .fitWidth, // Occupe toute la largeur tout en gardant les proportions
-              filterQuality: FilterQuality.high, // Meilleure qualité
+      body: isLoading
+          ? Center(child: CircularProgressIndicator())
+          : GridView.builder(
+              gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
+                crossAxisCount: 3, // Nombre de colonnes
+                crossAxisSpacing: 4,
+                mainAxisSpacing: 4,
+              ),
+              itemCount: mediaPaths.length,
+              itemBuilder: (context, index) {
+                return GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => FullScreenImage(
+                          mediaPaths: mediaPaths,
+                          initialIndex: index,
+                        ),
+                      ),
+                    );
+                  },
+                  child: Image.file(
+                    File(mediaPaths[index]),
+                    fit: BoxFit.cover,
+                    filterQuality: FilterQuality.none, // 10x faster
+                    cacheWidth: 300,
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
     );
   }
 }
