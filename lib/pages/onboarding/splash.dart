@@ -2,6 +2,7 @@
 Splash screen : check if onboarding screens should be displayed or not
 */
 import 'package:flutter/material.dart';
+import 'package:pierre/pages/index/photos.dart';
 import 'package:pierre/pages/onboarding/onboarding.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
@@ -15,7 +16,7 @@ class SplashScreen extends StatelessWidget {
       if (hasSeenOnboarding) {
         // Redirige vers la page principale
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (context) => Placeholder()),
+          MaterialPageRoute(builder: (context) => Photos()),
         );
       } else {
         // Redirige vers l'onboarding
