@@ -1,6 +1,6 @@
 import 'package:permission_handler/permission_handler.dart';
 
-class Permissionhandler {
+class PermissionHandler {
   Future<PermissionStatus> getPermsStatus() async {
     PermissionStatus mediaAccess =
         await Permission.manageExternalStorage.status;
@@ -20,14 +20,17 @@ class Permissionhandler {
     return false;
   }
 
-  Future<void> requestPerm() async {
+  Future<bool> requestPerm() async {
     bool isGranted = await isPermGranted();
 
     if (isGranted) {
-      return;
+      return true;
     }
 
     print("[PERMISSION HANDLER] En attente d'authorisation.");
     await Permission.manageExternalStorage.request();
+
+    isGranted = await isPermGranted();
+    return isGranted;
   }
 }
