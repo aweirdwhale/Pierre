@@ -28,7 +28,7 @@ class _PhotosState extends State<Photos> {
   List<dynamic> getMedia() {
     MediaHandler mediaHelper = MediaHandler();
     List<dynamic> mediaPaths = [];
-    var dir = Directory('/storage/emulated/0/');
+    var dir = Directory('/storage/emulated/0/DCIM/');
     mediaHelper.getAllMediaPaths(dir, mediaPaths);
 
     print("Nombre d'images : ${mediaPaths.length}");
@@ -41,7 +41,7 @@ class _PhotosState extends State<Photos> {
 
     return Scaffold(
       appBar: AppBar(
-        title: Text('Photos'),
+        title: Text('Photos : ${mediaPaths.length}'),
       ),
       body: GridView.builder(
         gridDelegate: SliverGridDelegateWithFixedCrossAxisCount(
