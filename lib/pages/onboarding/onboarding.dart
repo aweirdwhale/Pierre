@@ -3,6 +3,7 @@ This page is shown only one time : it asks for {manageMediaAccess} perms
 */
 import 'package:flutter/material.dart';
 import 'package:pierre/handlers/permissionhandler.dart';
+import 'package:pierre/pages/index/photos.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 class OnboardingScreen extends StatelessWidget {
@@ -33,7 +34,7 @@ class OnboardingScreen extends StatelessWidget {
             if (await permissions()) {
               // Redirige vers la page principale
               Navigator.of(context).pushReplacement(
-                MaterialPageRoute(builder: (context) => Placeholder()),
+                MaterialPageRoute(builder: (context) => Photos()),
               );
             }
           },
